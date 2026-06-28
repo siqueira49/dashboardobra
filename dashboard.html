@@ -815,12 +815,21 @@ function setSyncStatus(msg, color){
   document.getElementById('sync-dot').style.background = color;
 }
 
-async function fetchSheets(){
+function fetchSheets(){
   setSyncStatus('Buscando dados...', '#f0c040');
+  const script = document.getElementById('jsonp-script');
+  if(script) script.remove();
+  const s = document.createElement('script');
+  s.id = 'jsonp-script';
+  s.src = SHEETS_URL + '?callback=onSheetsData&t=' + Date.now();
+  s.onerror = function(){
+    setSyncStatus('Erro ao carregar — usando dados locais', '#e05c3a');
+  };
+  document.body.appendChild(s);
+}
+
+function onSheetsData(data){
   try {
-    const res = await fetch(SHEETS_URL);
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
     if(!data.transacoes || !data.transacoes.length) throw new Error('Sem dados');
     allData = data;
     renderAll(data);
