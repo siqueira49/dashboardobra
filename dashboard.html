@@ -474,6 +474,7 @@ function loadFile(e){
         if(!ent&&!sai)continue;
         const desc=row[5]?String(row[5]).trim():'';
         if(['Entradas','Saídas'].includes(desc))continue;
+        if(ent>0&&sai>0)continue;
         transacoes.push({
           data:row[0]?excelDate(row[0]):null,
           entrada:ent,saida:sai,descricao:desc,
