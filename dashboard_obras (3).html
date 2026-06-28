@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Obra</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --bg:#0e0f11;--surface:#16181c;--surface2:#1e2026;--border:#2a2d35;
+  --accent:#f0c040;--accent2:#e05c3a;--green:#3ddc84;--red:#e05c3a;
+  --blue:#5b8def;--purple:#a78bfa;
+  --text:#e8eaf0;--muted:#6b7280;
+  --font-d:'Bebas Neue',sans-serif;--font-m:'DM Mono',monospace;--font-b:'DM Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+header{padding:28px 40px 20px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--border);gap:20px;flex-wrap:wrap}
+.eyebrow{font-family:var(--font-m);font-size:11px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+h1{font-family:var(--font-d);font-size:clamp(32px,5vw,60px);color:var(--accent);line-height:1}
+.btn-upload{background:var(--accent);color:#000;border:none;padding:10px 22px;font-family:var(--font-m);font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:.2s;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.btn-upload:hover{background:#ffd966;transform:translateY(-1px)}
+.upload-hint{font-family:var(--font-m);font-size:10px;color:var(--muted);margin-top:6px;line-height:1.5}
+#file-input{display:none}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+.kpi{background:var(--surface);padding:24px 28px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent)}
+.kpi.red::before{background:var(--red)}.kpi.green::before{background:var(--green)}.kpi.blue::before{background:var(--blue)}
+.kpi-lbl{font-family:var(--font-m);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.kpi-val{font-family:var(--font-d);font-size:clamp(26px,3vw,40px);line-height:1}
+.kpi-val.g{color:var(--green)}.kpi-val.r{color:var(--red)}.kpi-val.y{color:var(--accent)}
+.kpi-sub{font-family:var(--font-m);font-size:11px;color:var(--muted);margin-top:5px}
+.kpi-ico{position:absolute;bottom:14px;right:18px;font-size:32px;opacity:.07}
+
+/* LAYOUT */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border)}
+.panel{background:var(--surface);padding:26px 30px}
+.panel.full{grid-column:1/-1}
+.panel.span2{grid-column:span 2}
+.ptitle{font-family:var(--font-d);font-size:20px;letter-spacing:.04em;color:var(--accent);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.ptitle .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.ptitle.red .dot,.ptitle.red{color:var(--red)}.ptitle.red .dot{background:var(--red)}
+.ptitle.green .dot,.ptitle.green{color:var(--green)}.ptitle.green .dot{background:var(--green)}
+.ptitle.blue .dot,.ptitle.blue{color:var(--blue)}.ptitle.blue .dot{background:var(--blue)}
+.ptitle.purple .dot,.ptitle.purple{color:var(--purple)}.ptitle.purple .dot{background:var(--purple)}
+
+/* INSUMOS CARDS */
+.insumos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.insumo-card{background:var(--surface2);border-radius:3px;padding:16px 14px;border-left:3px solid var(--accent);position:relative;overflow:hidden}
+.insumo-card.mao{border-left-color:var(--blue)}
+.insumo-card.areia{border-left-color:#34d399}
+.insumo-card.ferragem{border-left-color:var(--purple)}
+.insumo-card.outros{border-left-color:var(--muted)}
+.ins-icon{font-size:22px;margin-bottom:8px;display:block}
+.ins-name{font-family:var(--font-m);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.ins-qty{font-family:var(--font-d);font-size:28px;line-height:1;color:var(--text)}
+.ins-unit{font-family:var(--font-m);font-size:10px;color:var(--muted);margin-top:2px}
+.ins-total{font-family:var(--font-m);font-size:11px;color:var(--accent);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.ins-compras{font-family:var(--font-m);font-size:10px;color:var(--muted);margin-top:3px}
+
+/* MAO DE OBRA */
+.mao-table{width:100%;border-collapse:collapse}
+.mao-table td,.mao-table th{padding:9px 12px;font-family:var(--font-m);font-size:12px;border-bottom:1px solid var(--border)}
+.mao-table th{color:var(--muted);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.mao-table tr:hover td{background:var(--surface2)}
+.dia-chip{background:var(--blue);color:#fff;border-radius:2px;padding:2px 8px;font-size:11px;font-weight:500}
+
+/* PROGRESSOS */
+.prog-item{margin-bottom:14px}
+.prog-head{display:flex;justify-content:space-between;font-family:var(--font-m);font-size:11px;color:var(--muted);margin-bottom:5px}
+.prog-track{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;border-radius:4px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+
+/* BAR CHART */
+.bar-row{display:grid;grid-template-columns:110px 1fr 80px;align-items:center;gap:10px;margin-bottom:8px}
+.bar-lbl{font-family:var(--font-m);font-size:11px;text-align:right;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{height:20px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .8s cubic-bezier(.4,0,.2,1)}
+.bar-val{font-family:var(--font-m);font-size:11px;color:var(--muted);text-align:right}
+
+/* SEMANAS */
+.wk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.wk{background:var(--surface2);padding:14px 12px;border-left:3px solid var(--accent2)}
+.wk-n{font-family:var(--font-d);font-size:26px;color:var(--muted);line-height:1}
+.wk-v{font-family:var(--font-m);font-size:13px;color:var(--text);margin-top:5px}
+
+/* DONUT */
+.donut-wrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:8px;font-family:var(--font-m);font-size:11px;margin-bottom:8px}
+.ldot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;max-height:340px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-family:var(--font-m);font-size:12px}
+thead{position:sticky;top:0;background:var(--surface);z-index:2}
+th{text-align:left;padding:10px 12px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-size:10px;border-bottom:1px solid var(--border)}
+td{padding:8px 12px;border-bottom:1px solid rgba(42,45,53,.5)}
+tr:hover td{background:var(--surface2)}
+.tg{color:var(--green)}.tr{color:var(--red)}.tm{color:var(--muted)}
+
+/* FILTER */
+.filter-bar{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap}
+.fbtn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:5px 12px;font-family:var(--font-m);font-size:11px;cursor:pointer;transition:.15s;letter-spacing:.06em}
+.fbtn:hover,.fbtn.active{background:var(--accent);border-color:var(--accent);color:#000}
+
+/* CONTAS */
+.conta-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.conta-c{background:var(--surface2);padding:14px 16px;border-bottom:2px solid var(--accent)}
+.conta-c:last-child{border-bottom-color:var(--blue)}
+.conta-n{font-family:var(--font-d);font-size:18px;color:var(--accent)}
+.conta-c:last-child .conta-n{color:var(--blue)}
+.conta-v{font-family:var(--font-m);font-size:18px;color:var(--text);margin-top:4px}
+
+/* PROGRESSO SALDO */
+.prog-saldo{margin-top:16px}
+.prog-lbl{display:flex;justify-content:space-between;font-family:var(--font-m);font-size:11px;color:var(--muted);margin-bottom:5px}
+.prog-tk{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.prog-fk{height:100%;background:linear-gradient(90deg,var(--green),var(--accent));transition:width 1s}
+
+/* HISTORICO PRECOS */
+.preco-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-family:var(--font-m);font-size:11px}
+.preco-mat{color:var(--text);flex:1}
+.preco-chip{background:var(--surface2);padding:3px 8px;border-radius:2px;color:var(--accent)}
+.preco-trend{font-size:10px;color:var(--muted)}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--green);color:#000;padding:12px 22px;font-family:var(--font-m);font-size:12px;font-weight:500;transform:translateY(80px);opacity:0;transition:.3s;z-index:999;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.toast.show{transform:translateY(0);opacity:1}
+
+footer{text-align:center;padding:18px;font-family:var(--font-m);font-size:10px;color:var(--muted);border-top:1px solid var(--border)}
+
+.no-data{display:flex;align-items:center;justify-content:center;height:120px;color:var(--muted);font-family:var(--font-m);font-size:12px;flex-direction:column;gap:8px}
+
+@media(max-width:900px){
+  .grid2,.grid3{grid-template-columns:1fr}
+  .panel.span2{grid-column:span 1}
+  header{padding:20px}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="eyebrow">Controle Financeiro · Construção</div>
+    <h1>OBRA</h1>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+    <button class="btn-upload" onclick="fetchSheets()">↻ Atualizar Agora</button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block"></span>
+      <span id="sync-status" style="font-family:var(--font-m);font-size:11px;color:var(--muted)">Conectando ao Google Sheets...</span>
+    </div>
+    <div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">Sincronização automática a cada 60s</div>
+  </div>
+</header>
+
+<!-- KPIs -->
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-lbl">Total Arrecadado</div>
+    <div class="kpi-val y" id="kEntrada">—</div>
+    <div class="kpi-sub">Depósitos + Juros</div>
+    <div class="kpi-ico">📥</div>
+  </div>
+  <div class="kpi red">
+    <div class="kpi-lbl">Total Gasto</div>
+    <div class="kpi-val r" id="kSaida">—</div>
+    <div class="kpi-sub" id="kSaidaSub">Materiais + M.O.</div>
+    <div class="kpi-ico">📤</div>
+  </div>
+  <div class="kpi green">
+    <div class="kpi-lbl">Saldo Disponível</div>
+    <div class="kpi-val g" id="kSaldo">—</div>
+    <div class="kpi-sub" id="kPct">—% do fundo disponível</div>
+    <div class="kpi-ico">💰</div>
+  </div>
+  <div class="kpi blue">
+    <div class="kpi-lbl">Mão de Obra Total</div>
+    <div class="kpi-val" id="kMO" style="color:var(--blue)">—</div>
+    <div class="kpi-sub" id="kMOsub">Pedreiro + Servente</div>
+    <div class="kpi-ico">👷</div>
+  </div>
+  <div class="kpi" style="--accent:var(--purple)">
+    <div class="kpi-lbl">Materiais Aplicados</div>
+    <div class="kpi-val" id="kMat" style="color:var(--purple)">—</div>
+    <div class="kpi-sub" id="kMatSub">Estrutura + Areia + etc.</div>
+    <div class="kpi-ico">🧱</div>
+  </div>
+</div>
+
+<!-- INSUMOS DETALHADOS -->
+<div style="background:var(--surface);padding:26px 30px;border-bottom:1px solid var(--border)">
+  <div class="ptitle"><span class="dot"></span> Consumo de Insumos por Material</div>
+  <div class="insumos-grid" id="insumos-grid">
+    <div class="no-data" style="grid-column:1/-1"><span style="font-size:28px">🧱</span><span>Carregue a planilha para ver o consumo</span></div>
+  </div>
+</div>
+
+<!-- GRID PRINCIPAL -->
+<div class="grid2">
+
+  <!-- SITUAÇÃO FINANCEIRA -->
+  <div class="panel">
+    <div class="ptitle green"><span class="dot"></span> Situação Financeira</div>
+    <div style="font-family:var(--font-d);font-size:clamp(36px,5vw,58px);color:var(--green);line-height:1" id="saldoBig">R$ 0</div>
+    <div style="font-family:var(--font-m);font-size:11px;color:var(--muted);margin-top:6px" id="saldoInfo">—</div>
+    <div class="prog-saldo">
+      <div class="prog-lbl"><span>Gastos / Total Arrecadado</span><span id="pctLbl">0%</span></div>
+      <div class="prog-tk"><div class="prog-fk" id="pctBar" style="width:0%"></div></div>
+    </div>
+    <div class="conta-row">
+      <div class="conta-c"><div class="conta-n">Itaú</div><div class="conta-v" id="ctItau">—</div></div>
+      <div class="conta-c"><div class="conta-n" style="color:var(--blue)">99 Pay</div><div class="conta-v" id="ct99">—</div></div>
+    </div>
+  </div>
+
+  <!-- GASTOS POR CATEGORIA -->
+  <div class="panel">
+    <div class="ptitle red"><span class="dot"></span> Gastos por Categoria</div>
+    <div class="donut-wrap" id="donutWrap">
+      <div class="no-data"><span style="font-size:28px">📊</span><span>Carregue para ver</span></div>
+    </div>
+  </div>
+
+  <!-- MÃO DE OBRA DETALHADA -->
+  <div class="panel">
+    <div class="ptitle blue"><span class="dot"></span> Mão de Obra — Dias Trabalhados</div>
+    <table class="mao-table">
+      <thead><tr><th>Função</th><th>Diárias</th><th>Diária R$</th><th>Total</th></tr></thead>
+      <tbody id="maoTbody"><tr><td colspan="4" style="color:var(--muted);padding:30px;text-align:center">Carregue a planilha</td></tr></tbody>
+    </table>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:10px" id="maoTotais"></div>
+  </div>
+
+  <!-- EVOLUÇÃO GASTOS POR SEMANA -->
+  <div class="panel">
+    <div class="ptitle"><span class="dot"></span> Gastos por Semana</div>
+    <div class="wk-grid" id="wkGrid">
+      <div class="no-data"><span style="font-size:28px">📅</span><span>Carregue para ver</span></div>
+    </div>
+  </div>
+
+  <!-- RANKING MATERIAIS (barras) -->
+  <div class="panel span2">
+    <div class="ptitle purple"><span class="dot"></span> Ranking de Gastos — Materiais</div>
+    <div class="filter-bar" id="filterBar">
+      <button class="fbtn active" onclick="setFilter('todos',this)">Todos</button>
+      <button class="fbtn" onclick="setFilter('estrutura',this)">Estrutura</button>
+      <button class="fbtn" onclick="setFilter('mao',this)">Mão de Obra</button>
+      <button class="fbtn" onclick="setFilter('areia',this)">Areia</button>
+      <button class="fbtn" onclick="setFilter('outros',this)">Outros</button>
+    </div>
+    <div id="barChart"><div class="no-data"><span>Carregue a planilha</span></div></div>
+  </div>
+
+  <!-- HISTÓRICO PREÇOS UNITÁRIOS -->
+  <div class="panel">
+    <div class="ptitle"><span class="dot" style="background:var(--muted)"></span> Histórico de Preços Unitários</div>
+    <div id="precosHist"><div class="no-data"><span>Carregue para ver variação de preços</span></div></div>
+  </div>
+
+  <!-- EXTRATO COMPLETO -->
+  <div class="panel">
+    <div class="ptitle"><span class="dot" style="background:var(--muted)"></span> Extrato</div>
+    <div class="filter-bar" id="tblFilter">
+      <button class="fbtn active" onclick="setTblFilter('todos',this)">Todos</button>
+      <button class="fbtn" onclick="setTblFilter('entradas',this)">Entradas</button>
+      <button class="fbtn" onclick="setTblFilter('saidas',this)">Saídas</button>
+    </div>
+    <div class="tbl-wrap">
+      <table><thead><tr><th>#</th><th>Data</th><th>Descrição</th><th>Qtd</th><th>Unit.</th><th>Entrada</th><th>Saída</th></tr></thead>
+      <tbody id="tblBody"><tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">Carregue a planilha</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<footer>Dashboard Obra · Atualizado ao carregar nova planilha · Dados de <span id="footerData">—</span></footer>
+<div class="toast" id="toast">✓ Planilha carregada!</div>
+
+<script>
+// ===================== CONFIG =====================
+const COLORS=['#f0c040','#e05c3a','#3ddc84','#5b8def','#a78bfa','#fb923c','#34d399','#60a5fa','#f472b6','#fbbf24'];
+
+const INSUMOS_DEF = [
+  {key:'tijolo',   label:'Tijolo',         unit:'unid.',   icon:'🧱', cat:'estrutura', color:'#e05c3a'},
+  {key:'cimento',  label:'Cimento',         unit:'sacos',   icon:'🏗️', cat:'estrutura', color:'#f0c040'},
+  {key:'areia_fina',label:'Areia Fina',     unit:'m³',      icon:'🏖️', cat:'areia',    color:'#34d399'},
+  {key:'areia_grossa',label:'Areia Grossa', unit:'m³',      icon:'⛏️', cat:'areia',    color:'#10b981'},
+  {key:'brita',    label:'Brita',           unit:'m³',      icon:'🪨', cat:'estrutura', color:'#8b5cf6'},
+  {key:'ferragem', label:'Ferragem',         unit:'lotes',   icon:'🔩', cat:'estrutura', color:'#a78bfa'},
+  {key:'pedreiro', label:'Pedreiro',         unit:'dias',    icon:'👷', cat:'mao',      color:'#5b8def'},
+  {key:'servente', label:'Servente',         unit:'dias',    icon:'🧑‍🔧', cat:'mao',    color:'#60a5fa'},
+  {key:'impermeabilizante',label:'Impermeab.',unit:'lata',  icon:'🛡️', cat:'outros',   color:'#6b7280'},
+  {key:'aterro',   label:'Aterro',           unit:'serv.',   icon:'🚛', cat:'outros',   color:'#6b7280'},
+];
+
+function normaliza(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+
+function matchInsumo(desc){
+  const d = normaliza(desc);
+  if(d.includes('tijolo')) return 'tijolo';
+  if(d.includes('cimento')) return 'cimento';
+  if((d.includes('areia') && (d.includes('fina') || d.includes('fino')))) return 'areia_fina';
+  if((d.includes('areia') && (d.includes('gross'))) ) return 'areia_grossa';
+  if(d.includes('areia fina/ grossa') || d.includes('areia fina/grossa')) return 'areia_fina'; // misto
+  if(d.includes('areia') && !d.includes('gross') && !d.includes('fina')) return 'areia_fina'; // genérica
+  if(d.includes('brita')) return 'brita';
+  if(d.includes('ferragem') || d.includes('arames') || d.includes('prego')) return 'ferragem';
+  if(d.includes('pedreiro')) return 'pedreiro';
+  if(d.includes('servente')) return 'servente';
+  if(d.includes('impermeabilizante') || d.includes('ipermiabilizante')) return 'impermeabilizante';
+  if(d.includes('aterro')) return 'aterro';
+  return null;
+}
+
+function getGrupo(desc){
+  const d = normaliza(desc);
+  if(d.includes('tijolo')) return 'Tijolos';
+  if(d.includes('cimento')) return 'Cimento';
+  if(d.includes('areia')) return 'Areia';
+  if(d.includes('brita')) return 'Brita';
+  if(d.includes('ferragem') || d.includes('arames') || d.includes('prego')) return 'Ferragem';
+  if(d.includes('pedreiro')) return 'Pedreiro';
+  if(d.includes('servente')) return 'Servente';
+  if(d.includes('impermeabilizante') || d.includes('ipermiabilizante')) return 'Impermeabilizante';
+  if(d.includes('aterro')) return 'Aterro';
+  if(d.includes('laje')) return 'Laje';
+  if(d.includes('doenca') || d.includes('doença')) return 'Despesas Pessoais';
+  if(d.includes('imposto')) return 'Imposto';
+  return desc;
+}
+
+function fmt(v){return 'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fmtN(v,dec=1){return v.toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec})}
+
+function excelDate(n){
+  try{const d=new Date(Math.round((n-25569)*86400*1000));return d.toLocaleDateString('pt-BR')}catch{return null}
+}
+
+// ===================== DADOS DEMO =====================
+const DEMO = {
+  transacoes:[
+    {data:null,entrada:0,saida:134.93,descricao:"Imposto",quantidade:0,unitario:0},
+    {data:null,entrada:55326.68,saida:0,descricao:"Inicial",quantidade:0,unitario:0},
+    {data:null,entrada:141.41,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:3900,saida:0,descricao:"Depósito",quantidade:0,unitario:0},
+    {data:null,entrada:1000,saida:0,descricao:"Depósito",quantidade:0,unitario:0},
+    {data:null,entrada:188.43,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:3000,saida:0,descricao:"Depósito",quantidade:0,unitario:0},
+    {data:null,entrada:5348.43,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:2160,descricao:"Tijolo",quantidade:3000,unitario:0.72},
+    {data:null,entrada:194.25,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:45,descricao:"Ferragem",quantidade:0,unitario:0},
+    {data:null,entrada:77.46,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:754.85,descricao:"Cimento",quantidade:15,unitario:50.32},
+    {data:null,entrada:63.77,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:2500,saida:0,descricao:"Depósito",quantidade:0,unitario:0},
+    {data:null,entrada:3500,saida:0,descricao:"Depósito",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:395,descricao:"Ferragem",quantidade:0,unitario:0},
+    {data:null,entrada:21.38,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:300,descricao:"Servente",quantidade:3,unitario:100},
+    {data:null,entrada:23.32,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:23.31,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:750,descricao:"Pedreiro",quantidade:5,unitario:150},
+    {data:null,entrada:0,saida:500,descricao:"Servente",quantidade:5,unitario:100},
+    {data:null,entrada:69.09,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:780,descricao:"Tijolo",quantidade:1000,unitario:0.78},
+    {data:null,entrada:44.95,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:100,descricao:"Areia fina",quantidade:1,unitario:100},
+    {data:null,entrada:0,saida:240,descricao:"Servente",quantidade:2,unitario:120},
+    {data:null,entrada:22.21,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:205,descricao:"Cimento",quantidade:5,unitario:41},
+    {data:null,entrada:0,saida:198,descricao:"Areia fina",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:178,descricao:"Areia Grossa",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:390,descricao:"Tijolo",quantidade:500,unitario:0.78},
+    {data:null,entrada:22.07,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:600,descricao:"Pedreiro",quantidade:4,unitario:150},
+    {data:null,entrada:0,saida:400,descricao:"Servente",quantidade:4,unitario:100},
+    {data:null,entrada:1000,saida:0,descricao:"Depósito",quantidade:0,unitario:0},
+    {data:null,entrada:66.19,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:1000,saida:0,descricao:"Depósito",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:510,descricao:"Ferragem",quantidade:0,unitario:0},
+    {data:null,entrada:21.92,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:21.93,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:79,descricao:"Areia grossa",quantidade:1,unitario:79},
+    {data:null,entrada:0,saida:79,descricao:"Areia grossa",quantidade:1,unitario:79},
+    {data:null,entrada:0,saida:205,descricao:"Cimento",quantidade:5,unitario:41},
+    {data:null,entrada:0,saida:205,descricao:"Cimento",quantidade:5,unitario:41},
+    {data:null,entrada:0,saida:30,descricao:"Arames/ Prego",quantidade:1,unitario:30},
+    {data:null,entrada:0,saida:300,descricao:"Servente",quantidade:3,unitario:100},
+    {data:null,entrada:0,saida:450,descricao:"Pedreiro",quantidade:3,unitario:150},
+    {data:null,entrada:0,saida:64,descricao:"Ferragem",quantidade:1,unitario:64},
+    {data:null,entrada:64.51,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:21.52,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:205,descricao:"Brita",quantidade:1,unitario:205},
+    {data:null,entrada:21.46,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:100,descricao:"Servente",quantidade:1,unitario:100},
+    {data:null,entrada:0,saida:150,descricao:"Pedreiro",quantidade:1,unitario:150},
+    {data:null,entrada:0,saida:208.7,descricao:"Laje cisterna",quantidade:1,unitario:208.7},
+    {data:null,entrada:0,saida:84.93,descricao:"Brita",quantidade:0.5,unitario:169.86},
+    {data:null,entrada:0,saida:82,descricao:"Cimento",quantidade:2,unitario:41},
+    {data:null,entrada:29.6,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:90,descricao:"Ferragem",quantidade:1,unitario:90},
+    {data:null,entrada:22.18,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:44.38,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:50,descricao:"Areia grossa",quantidade:0.5,unitario:50},
+    {data:null,entrada:0,saida:230,descricao:"Pedreiro",quantidade:1.5,unitario:230},
+    {data:null,entrada:0,saida:150,descricao:"Servente",quantidade:1.5,unitario:100},
+    {data:null,entrada:0,saida:77,descricao:"Ipermiabilizante",quantidade:1,unitario:77},
+    {data:null,entrada:0,saida:98.23,descricao:"Cimento",quantidade:2,unitario:49.12},
+    {data:null,entrada:84.26,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:84.36,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:105.63,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:19.18,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:106.74,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:500,descricao:"Doença",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:124.74,descricao:"Doença",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:324.57,descricao:"Doença",quantidade:0,unitario:0},
+    {data:null,entrada:45.89,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:46.76,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:92.7,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:307.31,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:146.84,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:220.29,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:22.98,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:700,descricao:"Aterro",quantidade:0,unitario:0},
+    {data:null,entrada:48.22,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:120,descricao:"Servente",quantidade:0,unitario:0},
+    {data:null,entrada:168.45,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:332.92,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:2000,descricao:"Tijolo",quantidade:2500,unitario:0.8},
+    {data:null,entrada:870.59,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:338.16,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:34.38,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:34.4,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:450,descricao:"Cimento",quantidade:10,unitario:45},
+    {data:null,entrada:0,saida:290,descricao:"Areia fina/ grossa",quantidade:5,unitario:58},
+    {data:null,entrada:0,saida:200,descricao:"Areia Fina",quantidade:2,unitario:100},
+    {data:null,entrada:68.51,saida:0,descricao:"Juros",quantidade:0,unitario:0},
+    {data:null,entrada:0,saida:600,descricao:"Pedreiro",quantidade:4,unitario:150},
+    {data:null,entrada:0,saida:400,descricao:"Servente",quantidade:4,unitario:100},
+    {data:null,entrada:0,saida:2000,descricao:"Tijolo",quantidade:2500,unitario:0.8}
+  ],
+  semanas:[4904.85,3091,2127,625.63,695.23,3940,0],
+  contas:{itau:27299.44,pay99:36371.63}
+};
+
+let curFilter='todos', curTblFilter='todos', allData=null;
+
+// ===================== LOAD =====================
+function loadFile(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'array'});
+      const sheet=wb.Sheets[wb.SheetNames[0]];
+      const raw=XLSX.utils.sheet_to_json(sheet,{header:1,defval:null});
+      const transacoes=[];
+      for(let i=1;i<raw.length;i++){
+        const row=raw[i];if(!row)continue;
+        const ent=parseFloat(row[1])||0;
+        const sai=parseFloat(row[2])||0;
+        if(!ent&&!sai)continue;
+        const desc=row[5]?String(row[5]).trim():'';
+        if(['Entradas','Saídas'].includes(desc))continue;
+        transacoes.push({
+          data:row[0]?excelDate(row[0]):null,
+          entrada:ent,saida:sai,descricao:desc,
+          quantidade:parseFloat(row[6])||0,
+          unitario:parseFloat(row[7])||0
+        });
+      }
+      let semanas=[];
+      const ds=wb.Sheets['Detalhes'];
+      if(ds){
+        const det=XLSX.utils.sheet_to_json(ds,{header:1,defval:null});
+        for(const r of det)if(r[0]&&String(r[0]).includes('Semana'))semanas.push(parseFloat(r[1])||0);
+      }
+      let contas={itau:0,pay99:0};
+      const distS=wb.Sheets['Distribuição dos recursos'];
+      if(distS){
+        const dist=XLSX.utils.sheet_to_json(distS,{header:1,defval:null});
+        for(const r of dist){
+          if(!r[0])continue;
+          const lbl=normaliza(String(r[0]));
+          const vals=r.slice(1).filter(v=>v!==null&&!isNaN(v));
+          const last=vals[vals.length-1];
+          if(lbl.includes('itau'))contas.itau=parseFloat(last)||0;
+          if(lbl.includes('99'))contas.pay99=parseFloat(last)||0;
+        }
+      }
+      allData={transacoes,semanas:semanas.length?semanas:DEMO.semanas,contas};
+      renderAll(allData);
+      toast('✓ Planilha carregada com sucesso!');
+    }catch(err){toast('⚠ Erro: '+err.message,true)}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function toast(msg,err){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.background=err?'var(--red)':'var(--green)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ===================== RENDER =====================
+function renderAll(data){
+  const {transacoes,semanas,contas}=data;
+  const totEnt=transacoes.reduce((s,r)=>s+r.entrada,0);
+  const totSai=transacoes.reduce((s,r)=>s+r.saida,0);
+  const saldo=totEnt-totSai;
+  const pct=totEnt>0?(totSai/totEnt*100):0;
+
+  // Calc MO e Materiais
+  const moTotal=transacoes.filter(r=>r.saida>0&&(normaliza(r.descricao).includes('pedreiro')||normaliza(r.descricao).includes('servente'))).reduce((s,r)=>s+r.saida,0);
+  const matTotal=transacoes.filter(r=>{
+    if(!r.saida)return false;
+    const d=normaliza(r.descricao);
+    return!d.includes('pedreiro')&&!d.includes('servente')&&!d.includes('juros')&&!d.includes('deposito')&&!d.includes('inicial')&&!d.includes('doenca')&&!d.includes('imposto');
+  }).reduce((s,r)=>s+r.saida,0);
+
+  // KPIs
+  document.getElementById('kEntrada').textContent=fmt(totEnt);
+  document.getElementById('kSaida').textContent=fmt(totSai);
+  document.getElementById('kSaldo').textContent=fmt(saldo);
+  document.getElementById('kPct').textContent=(100-pct).toFixed(1)+'% do fundo disponível';
+  document.getElementById('kMO').textContent=fmt(moTotal);
+  document.getElementById('kMat').textContent=fmt(matTotal);
+
+  // Saldo
+  document.getElementById('saldoBig').textContent=fmt(saldo);
+  document.getElementById('saldoInfo').textContent=`Entradas R$ ${totEnt.toLocaleString('pt-BR',{minimumFractionDigits:2})} · Saídas R$ ${totSai.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+  document.getElementById('pctBar').style.width=Math.min(pct,100)+'%';
+  document.getElementById('pctLbl').textContent=pct.toFixed(1)+'% gasto';
+  document.getElementById('ctItau').textContent=fmt(contas.itau);
+  document.getElementById('ct99').textContent=fmt(contas.pay99);
+
+  // Footer
+  document.getElementById('footerData').textContent=new Date().toLocaleDateString('pt-BR');
+
+  renderInsumos(transacoes);
+  renderDonut(transacoes);
+  renderBars(transacoes,curFilter);
+  renderMO(transacoes);
+  renderSemanas(semanas);
+  renderPrecos(transacoes);
+  renderTable(transacoes,curTblFilter);
+}
+
+// ===================== INSUMOS =====================
+function renderInsumos(transacoes){
+  // Agrega por insumo
+  const agg={};
+  for(const t of transacoes){
+    if(!t.saida||!t.descricao)continue;
+    const key=matchInsumo(t.descricao);
+    if(!key)continue;
+    if(!agg[key])agg[key]={total:0,qtd:0,compras:0,precos:[],ultimoPreco:0};
+    agg[key].total+=t.saida;
+    agg[key].compras++;
+    if(t.quantidade>0)agg[key].qtd+=t.quantidade;
+    if(t.unitario>0)agg[key].precos.push(t.unitario);
+  }
+
+  const html=INSUMOS_DEF.map(ins=>{
+    const d=agg[ins.key];
+    if(!d)return'';
+    const isDiaria=ins.key==='pedreiro'||ins.key==='servente';
+    const diaria=ins.key==='pedreiro'?DIARIA_PEDREIRO:ins.key==='servente'?DIARIA_SERVENTE:0;
+    const avgPreco=isDiaria?diaria:(d.precos.length?d.precos.reduce((s,v)=>s+v,0)/d.precos.length:0);
+    const precoMin=isDiaria?diaria:(d.precos.length?Math.min(...d.precos):0);
+    const precoMax=isDiaria?diaria:(d.precos.length?Math.max(...d.precos):0);
+    const hasVar=!isDiaria&&precoMin>0&&precoMax>0&&precoMax!==precoMin;
+    const varPct=hasVar?((precoMax-precoMin)/precoMin*100):0;
+    const qtdEfetiva=isDiaria&&d.qtd===0?d.total/diaria:d.qtd;
+    let qtdStr=qtdEfetiva>0?fmtN(qtdEfetiva,qtdEfetiva<10?1:0):'-';
+
+    return`<div class="insumo-card ${ins.cat}">
+      <span class="ins-icon">${ins.icon}</span>
+      <div class="ins-name">${ins.label}</div>
+      <div class="ins-qty">${qtdStr}</div>
+      <div class="ins-unit">${d.qtd>0?ins.unit:'sem qtd registrada'}</div>
+      <div class="ins-total">${fmt(d.total)}</div>
+      <div class="ins-compras">${d.compras} compra${d.compras>1?'s':''}${avgPreco>0?' · média '+fmt(avgPreco):''}</div>
+      ${hasVar?`<div style="font-family:var(--font-m);font-size:10px;color:var(--accent2);margin-top:4px">▲${varPct.toFixed(0)}% variação de preço</div>`:''}
+    </div>`;
+  }).filter(Boolean).join('');
+
+  document.getElementById('insumos-grid').innerHTML=html||'<div class="no-data">Nenhum insumo encontrado</div>';
+}
+
+// ===================== MÃO DE OBRA =====================
+const DIARIA_PEDREIRO = 150;
+const DIARIA_SERVENTE = 100;
+
+function renderMO(transacoes){
+  const mo={pedreiro:{dias:0,total:0},servente:{dias:0,total:0}};
+  for(const t of transacoes){
+    if(!t.saida)continue;
+    const d=normaliza(t.descricao);
+    if(d.includes('pedreiro')){
+      mo.pedreiro.total+=t.saida;
+      // Se quantidade registrada, usa ela; senão deriva pelo valor fixo da diária
+      mo.pedreiro.dias += t.quantidade>0 ? t.quantidade : t.saida/DIARIA_PEDREIRO;
+    }
+    if(d.includes('servente')){
+      mo.servente.total+=t.saida;
+      mo.servente.dias += t.quantidade>0 ? t.quantidade : t.saida/DIARIA_SERVENTE;
+    }
+  }
+
+  document.getElementById('maoTbody').innerHTML=`
+    <tr>
+      <td>👷 Pedreiro</td>
+      <td><span class="dia-chip">${fmtN(mo.pedreiro.dias,1)} dias</span></td>
+      <td class="tm">${fmt(DIARIA_PEDREIRO)}/dia</td>
+      <td class="tg">${fmt(mo.pedreiro.total)}</td>
+    </tr>
+    <tr>
+      <td>🧑‍🔧 Servente</td>
+      <td><span class="dia-chip" style="background:var(--blue);opacity:.7">${fmtN(mo.servente.dias,1)} dias</span></td>
+      <td class="tm">${fmt(DIARIA_SERVENTE)}/dia</td>
+      <td class="tg">${fmt(mo.servente.total)}</td>
+    </tr>
+  `;
+
+  const total=mo.pedreiro.total+mo.servente.total;
+  const totalDias=mo.pedreiro.dias+mo.servente.dias;
+  document.getElementById('maoTotais').innerHTML=`
+    <div style="background:var(--surface2);padding:12px 14px;border-left:3px solid var(--blue)">
+      <div style="font-family:var(--font-m);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Total Dias</div>
+      <div style="font-family:var(--font-d);font-size:24px;color:var(--blue)">${fmtN(totalDias,1)}</div>
+      <div style="font-family:var(--font-m);font-size:10px;color:var(--muted);margin-top:3px">👷 ${fmtN(mo.pedreiro.dias,1)} · 🧑‍🔧 ${fmtN(mo.servente.dias,1)}</div>
+    </div>
+    <div style="background:var(--surface2);padding:12px 14px;border-left:3px solid var(--green)">
+      <div style="font-family:var(--font-m);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Total M.O.</div>
+      <div style="font-family:var(--font-d);font-size:24px;color:var(--green)">${fmt(total)}</div>
+      <div style="font-family:var(--font-m);font-size:10px;color:var(--muted);margin-top:3px">Diárias: R$150 · R$100</div>
+    </div>
+  `;
+}
+
+// ===================== DONUT =====================
+function renderDonut(transacoes){
+  const cats={};
+  for(const t of transacoes){
+    if(!t.saida||!t.descricao)continue;
+    const g=getGrupo(t.descricao);
+    cats[g]=(cats[g]||0)+t.saida;
+  }
+  const entries=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const total=entries.reduce((s,[,v])=>s+v,0);
+  if(!entries.length){document.getElementById('donutWrap').innerHTML='<div class="no-data">Sem dados</div>';return;}
+
+  const top8=entries.slice(0,8);
+  const size=160,cx=80,cy=80,r=58,inner=34;
+  let angle=-Math.PI/2,paths='';
+  top8.forEach(([,val],i)=>{
+    const sl=(val/total)*2*Math.PI;
+    const x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle);
+    const x2=cx+r*Math.cos(angle+sl),y2=cy+r*Math.sin(angle+sl);
+    const xi1=cx+inner*Math.cos(angle),yi1=cy+inner*Math.sin(angle);
+    const xi2=cx+inner*Math.cos(angle+sl),yi2=cy+inner*Math.sin(angle+sl);
+    const lg=sl>Math.PI?1:0;
+    paths+=`<path d="M ${xi1} ${yi1} L ${x1} ${y1} A ${r} ${r} 0 ${lg} 1 ${x2} ${y2} L ${xi2} ${yi2} A ${inner} ${inner} 0 ${lg} 0 ${xi1} ${yi1} Z" fill="${COLORS[i]}" opacity=".9"/>`;
+    angle+=sl;
+  });
+
+  document.getElementById('donutWrap').innerHTML=`
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      ${paths}
+      <text x="${cx}" y="${cy-6}" text-anchor="middle" fill="#6b7280" font-family="DM Mono" font-size="9">GASTOS</text>
+      <text x="${cx}" y="${cy+10}" text-anchor="middle" fill="#f0c040" font-family="Bebas Neue" font-size="13">${fmt(total)}</text>
+    </svg>
+    <div class="donut-legend">${top8.map(([lbl,val],i)=>`
+      <div class="legend-item">
+        <div class="ldot" style="background:${COLORS[i]}"></div>
+        <span style="color:var(--text);flex:1">${lbl}</span>
+        <span style="color:var(--muted)">${(val/total*100).toFixed(0)}%</span>
+      </div>`).join('')}
+    </div>`;
+}
+
+// ===================== BARRAS =====================
+const FILTER_MAP={
+  estrutura:['tijolo','cimento','brita','ferragem','arames','prego','laje','impermeabilizante','ipermiabilizante'],
+  mao:['pedreiro','servente'],
+  areia:['areia'],
+  outros:[]
+};
+
+function setFilter(f,btn){
+  curFilter=f;
+  document.querySelectorAll('#filterBar .fbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(allData)renderBars(allData.transacoes,f);
+}
+
+function renderBars(transacoes,filter){
+  const cats={};
+  for(const t of transacoes){
+    if(!t.saida||!t.descricao)continue;
+    const d=normaliza(t.descricao);
+    if(filter!=='todos'){
+      if(filter==='outros'){
+        const isEst=FILTER_MAP.estrutura.some(x=>d.includes(x));
+        const isMao=FILTER_MAP.mao.some(x=>d.includes(x));
+        const isAr=d.includes('areia');
+        if(isEst||isMao||isAr)continue;
+        if(['juros','deposito','inicial'].some(x=>d.includes(x)))continue;
+      } else {
+        const keys=FILTER_MAP[filter]||[];
+        if(!keys.some(x=>d.includes(x)))continue;
+      }
+    }
+    const g=getGrupo(t.descricao);
+    cats[g]=(cats[g]||0)+t.saida;
+  }
+  const entries=Object.entries(cats).sort((a,b)=>b[1]-a[1]).filter(([k])=>!['Juros','Depósito','Inicial'].includes(k));
+  if(!entries.length){document.getElementById('barChart').innerHTML='<div class="no-data">Sem dados</div>';return;}
+  const max=entries[0][1];
+  document.getElementById('barChart').innerHTML=entries.slice(0,12).map(([lbl,val])=>`
+    <div class="bar-row">
+      <div class="bar-lbl">${lbl}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(val/max*100)}%"></div></div>
+      <div class="bar-val">${fmt(val)}</div>
+    </div>`).join('');
+}
+
+// ===================== SEMANAS =====================
+function renderSemanas(semanas){
+  if(!semanas.some(v=>v>0)){document.getElementById('wkGrid').innerHTML='<div class="no-data">Sem dados de semana</div>';return;}
+  document.getElementById('wkGrid').innerHTML=semanas.map((v,i)=>`
+    <div class="wk">
+      <div class="wk-n">S${i+1}</div>
+      <div class="wk-v">${v>0?fmt(v):'—'}</div>
+    </div>`).join('');
+}
+
+// ===================== HISTÓRICO PREÇOS =====================
+function renderPrecos(transacoes){
+  // Pega todos itens com unitario registrado, agrupa por insumo e mostra variação
+  const hist={};
+  for(const t of transacoes){
+    if(!t.saida||!t.descricao||!t.unitario)continue;
+    const key=matchInsumo(t.descricao);
+    if(!key)continue;
+    if(!hist[key])hist[key]=[];
+    hist[key].push(t.unitario);
+  }
+
+  const rows=Object.entries(hist).map(([key,precos])=>{
+    const def=INSUMOS_DEF.find(d=>d.key===key);
+    if(!def)return'';
+    const min=Math.min(...precos),max=Math.max(...precos),avg=precos.reduce((s,v)=>s+v,0)/precos.length;
+    const trend=precos.length>1&&precos[precos.length-1]>precos[0]?'↑':'↓';
+    const trendColor=trend==='↑'?'var(--red)':'var(--green)';
+    return`<div class="preco-row">
+      <span style="font-size:18px">${def.icon}</span>
+      <span class="preco-mat">${def.label}</span>
+      <span class="preco-chip">${fmt(avg)}/${def.unit}</span>
+      ${precos.length>1?`<span class="preco-trend" style="color:${trendColor}">${trend} ${fmt(min)} → ${fmt(max)}</span>`:'<span class="preco-trend">1 compra</span>'}
+    </div>`;
+  }).filter(Boolean).join('');
+
+  document.getElementById('precosHist').innerHTML=rows||'<div class="no-data">Sem histórico de preços</div>';
+}
+
+// ===================== TABLE =====================
+function setTblFilter(f,btn){
+  curTblFilter=f;
+  document.querySelectorAll('#tblFilter .fbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(allData)renderTable(allData.transacoes,f);
+}
+
+function renderTable(transacoes,filter){
+  let rows=transacoes.filter(t=>{
+    if(!t.descricao)return false;
+    if(t.entrada>50000&&t.saida>10000)return false; // totalizador
+    if(filter==='entradas')return t.entrada>0;
+    if(filter==='saidas')return t.saida>0;
+    return true;
+  });
+  document.getElementById('tblBody').innerHTML=rows.map((r,i)=>`
+    <tr>
+      <td class="tm">${i+1}</td>
+      <td class="tm">${r.data||'—'}</td>
+      <td>${r.descricao||'—'}</td>
+      <td class="tm">${r.quantidade>0?fmtN(r.quantidade,r.quantidade<10?1:0):'—'}</td>
+      <td class="tm">${r.unitario>0?fmt(r.unitario):'—'}</td>
+      <td class="tg">${r.entrada>0?fmt(r.entrada):''}</td>
+      <td class="tr">${r.saida>0?fmt(r.saida):''}</td>
+    </tr>`).join('');
+}
+
+// ===================== SHEETS API =====================
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzXPCAhXOfBpsHZ3brfy58pHIzFoL3uuEJN_hN-s136Cc5sUja8rIlaV30T13UvjiP9UA/exec';
+
+function setSyncStatus(msg, color){
+  document.getElementById('sync-status').textContent = msg;
+  document.getElementById('sync-dot').style.background = color;
+}
+
+async function fetchSheets(){
+  setSyncStatus('Buscando dados...', '#f0c040');
+  try {
+    const res = await fetch(SHEETS_URL);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if(!data.transacoes || !data.transacoes.length) throw new Error('Sem dados');
+    allData = data;
+    renderAll(data);
+    const now = new Date().toLocaleTimeString('pt-BR');
+    setSyncStatus('Sincronizado às ' + now, '#3ddc84');
+    toast('✓ Dados atualizados do Google Sheets!');
+  } catch(err) {
+    setSyncStatus('Erro: ' + err.message + ' — usando dados locais', '#e05c3a');
+    if(!allData){ allData=DEMO; renderAll(DEMO); }
+  }
+}
+
+// ===================== INIT =====================
+allData = DEMO;
+renderAll(DEMO);
+fetchSheets();
+setInterval(fetchSheets, 60000);
+</script>
+</body>
+</html>
