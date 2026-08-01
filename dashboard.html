@@ -160,4 +160,154 @@ footer{text-align:center;padding:18px;font-family:var(--font-m);font-size:10px;c
     <div class="kpi-ico">💰</div>
   </div>
   <div class="kpi blue">
-    <div
+    <div class="kpi-lbl">Mão de Obra Total</div>
+    <div class="kpi-val" id="kMO" style="color:var(--blue)">—</div>
+    <div class="kpi-sub" id="kMOsub">Pedreiro + Servente</div>
+    <div class="kpi-ico">👷</div>
+  </div>
+  <div class="kpi" style="--accent:var(--purple)">
+    <div class="kpi-lbl">Materiais Aplicados</div>
+    <div class="kpi-val" id="kMat" style="color:var(--purple)">—</div>
+    <div class="kpi-sub" id="kMatSub">Estrutura + Areia + etc.</div>
+    <div class="kpi-ico">🧱</div>
+  </div>
+</div>
+
+<div style="background:var(--surface);padding:26px 30px;border-bottom:1px solid var(--border)">
+  <div class="ptitle"><span class="dot"></span> Consumo de Insumos por Material</div>
+  <div class="insumos-grid" id="insumos-grid">
+    <div class="no-data" style="grid-column:1/-1"><span style="font-size:28px">🧱</span><span>Carregue a planilha para ver o consumo</span></div>
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="panel">
+    <div class="ptitle green"><span class="dot"></span> Situação Financeira</div>
+    <div style="font-family:var(--font-d);font-size:clamp(36px,5vw,58px);color:var(--green);line-height:1" id="saldoBig">R$ 0</div>
+    <div style="font-family:var(--font-m);font-size:11px;color:var(--muted);margin-top:6px" id="saldoInfo">—</div>
+    <div class="prog-saldo">
+      <div class="prog-lbl"><span>Gastos / Total Arrecadado</span><span id="pctLbl">0%</span></div>
+      <div class="prog-tk"><div class="prog-fk" id="pctBar" style="width:0%"></div></div>
+    </div>
+    <div class="conta-row">
+      <div class="conta-c"><div class="conta-n">Itaú</div><div class="conta-v" id="ctItau">—</div></div>
+      <div class="conta-c"><div class="conta-n" style="color:var(--blue)">99 Pay</div><div class="conta-v" id="ct99">—</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle red"><span class="dot"></span> Gastos por Categoria</div>
+    <div class="donut-wrap" id="donutWrap">
+      <div class="no-data"><span style="font-size:28px">📊</span><span>Carregue para ver</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle blue"><span class="dot"></span> Mão de Obra — Dias Trabalhados</div>
+    <table class="mao-table">
+      <thead><tr><th>Função</th><th>Diárias</th><th>Diária R$</th><th>Total</th></tr></thead>
+      <tbody id="maoTbody"><tr><td colspan="4" style="color:var(--muted);padding:30px;text-align:center">Carregue a planilha</td></tr></tbody>
+    </table>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:10px" id="maoTotais"></div>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle"><span class="dot"></span> Gastos por Semana</div>
+    <div class="wk-grid" id="wkGrid">
+      <div class="no-data"><span style="font-size:28px">📅</span><span>Carregue para ver</span></div>
+    </div>
+  </div>
+
+  <div class="panel span2">
+    <div class="ptitle purple"><span class="dot"></span> Ranking de Gastos — Materiais</div>
+    <div class="filter-bar" id="filterBar">
+      <button class="fbtn active" onclick="setFilter('todos',this)">Todos</button>
+      <button class="fbtn" onclick="setFilter('estrutura',this)">Estrutura</button>
+      <button class="fbtn" onclick="setFilter('mao',this)">Mão de Obra</button>
+      <button class="fbtn" onclick="setFilter('areia',this)">Areia</button>
+      <button class="fbtn" onclick="setFilter('outros',this)">Outros</button>
+    </div>
+    <div id="barChart"><div class="no-data"><span>Carregue a planilha</span></div></div>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle"><span class="dot" style="background:var(--muted)"></span> Histórico de Preços Unitários</div>
+    <div id="precosHist"><div class="no-data"><span>Carregue para ver variação de preços</span></div></div>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle"><span class="dot" style="background:var(--muted)"></span> Extrato</div>
+    <div class="filter-bar" id="tblFilter">
+      <button class="fbtn active" onclick="setTblFilter('todos',this)">Todos</button>
+      <button class="fbtn" onclick="setTblFilter('entradas',this)">Entradas</button>
+      <button class="fbtn" onclick="setTblFilter('saidas',this)">Saídas</button>
+    </div>
+    <div class="tbl-wrap">
+      <table><thead><tr><th>#</th><th>Data</th><th>Descrição</th><th>Qtd</th><th>Unit.</th><th>Entrada</th><th>Saída</th></tr></thead>
+      <tbody id="tblBody"><tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">Carregue a planilha</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<footer>Portal da Transparência Obra · Atualizado ao carregar nova planilha · Dados de <span id="footerData">—</span></footer>
+<div class="toast" id="toast">✓ Planilha carregada!</div>
+
+<script>
+const COLORS=['#f0c040','#e05c3a','#3ddc84','#5b8def','#a78bfa','#fb923c','#34d399','#60a5fa','#f472b6','#fbbf24'];
+const INSUMOS_DEF = [
+  {key:'tijolo',label:'Tijolo',unit:'unid.',icon:'🧱',cat:'estrutura'},
+  {key:'cimento',label:'Cimento',unit:'sacos',icon:'🏗️',cat:'estrutura'},
+  {key:'areia_fina',label:'Areia Fina',unit:'m³',icon:'🏖️',cat:'areia'},
+  {key:'areia_grossa',label:'Areia Grossa',unit:'m³',icon:'⛏️',cat:'areia'},
+  {key:'brita',label:'Brita',unit:'m³',icon:'🪨',cat:'estrutura'},
+  {key:'ferragem',label:'Ferragem',unit:'lotes',icon:'🔩',cat:'estrutura'},
+  {key:'pedreiro',label:'Pedreiro',unit:'dias',icon:'👷',cat:'mao'},
+  {key:'servente',label:'Servente',unit:'dias',icon:'🧑‍🔧',cat:'mao'},
+];
+
+function normaliza(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+function parseData(dateStr){if(!dateStr)return null;const parts=String(dateStr).split('/');if(parts.length===3){const d=parseInt(parts[0]),m=parseInt(parts[1])-1,y=parseInt(parts[2]);return new Date(y,m,d);}return null;}
+function isAntesBaseDate(data){if(!data)return false;const d=parseData(data);if(!d)return false;const baseDate=new Date(2026,2,25);return d<=baseDate;}
+function matchInsumo(desc){const d=normaliza(desc);if(d.includes('tijolo'))return'tijolo';if(d.includes('cimento'))return'cimento';if(d.includes('areia')&&(d.includes('fina')||d.includes('fino')))return'areia_fina';if(d.includes('areia')&&d.includes('gross'))return'areia_grossa';if(d.includes('areia')&&!d.includes('gross')&&!d.includes('fina'))return'areia_fina';if(d.includes('brita'))return'brita';if(d.includes('ferragem')||d.includes('arames')||d.includes('prego'))return'ferragem';if(d.includes('pedreiro'))return'pedreiro';if(d.includes('servente'))return'servente';return null;}
+function getGrupo(desc){const d=normaliza(desc);if(d.includes('tijolo'))return'Tijolos';if(d.includes('cimento'))return'Cimento';if(d.includes('areia'))return'Areia';if(d.includes('brita'))return'Brita';if(d.includes('ferragem')||d.includes('arames'))return'Ferragem';if(d.includes('pedreiro'))return'Pedreiro';if(d.includes('servente'))return'Servente';if(d.includes('impermeabilizante'))return'Impermeabilizante';if(d.includes('aterro'))return'Aterro';if(d.includes('laje'))return'Laje';if(d.includes('doenca')||d.includes('doença'))return'Despesas';if(d.includes('imposto'))return'Imposto';return desc;}
+function fmt(v){return'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fmtN(v,dec=1){return v.toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec})}
+function excelDate(n){try{const d=new Date(Math.round((n-25569)*86400*1000));return d.toLocaleDateString('pt-BR')}catch{return null}}
+
+const DEMO={transacoes:[{data:null,entrada:55326.68,saida:0,descricao:"Inicial",quantidade:0,unitario:0},{data:null,entrada:0,saida:2160,descricao:"Tijolo",quantidade:3000,unitario:0.72},{data:null,entrada:0,saida:754.85,descricao:"Cimento",quantidade:15,unitario:50.32}],semanas:[0,0,0,0,0,0,0],contas:{itau:0,pay99:0}};
+
+let curFilter='todos',curTblFilter='todos',allData=null;
+
+function setSyncStatus(msg,color){document.getElementById('sync-status').textContent=msg;document.getElementById('sync-dot').style.background=color;}
+function fetchSheets(){setSyncStatus('Buscando...','#f0c040');const s=document.createElement('script');s.id='jsonp-script';s.src='https://script.google.com/macros/s/AKfycbzXPCAhXOfBpsHZ3brfy58pHIzFoL3uuEJN_hN-s136Cc5sUja8rIlaV30T13UvjiP9UA/exec?callback=onSheetsData&t='+Date.now();s.onerror=function(){setSyncStatus('Erro','#e05c3a');};document.body.appendChild(s);}
+function onSheetsData(data){document.getElementById('loadingScreen').classList.add('hidden');try{if(!data.transacoes||!data.transacoes.length)throw new Error('Sem dados');allData=data;renderAll(data);const now=new Date().toLocaleTimeString('pt-BR');setSyncStatus('Sincronizado às '+now,'#3ddc84');toast('✓ Atualizado!');}catch(err){setSyncStatus('Erro: '+err.message,'#e05c3a');if(!allData){allData=DEMO;renderAll(DEMO);}}}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+
+function renderAll(data){const{transacoes,semanas,contas}=data;const totEnt=transacoes.reduce((s,r)=>s+r.entrada,0);const totSai=transacoes.reduce((s,r)=>s+r.saida,0);const saldo=totEnt-totSai;const pct=totEnt>0?(totSai/totEnt*100):0;const moTotal=transacoes.filter(r=>r.saida>0&&(normaliza(r.descricao).includes('pedreiro')||normaliza(r.descricao).includes('servente'))).reduce((s,r)=>s+r.saida,0);const matTotal=transacoes.filter(r=>{if(!r.saida)return false;const d=normaliza(r.descricao);return!d.includes('pedreiro')&&!d.includes('servente')&&!d.includes('juros')&&!d.includes('deposito')&&!d.includes('inicial')&&!d.includes('doenca')&&!d.includes('imposto');}). reduce((s,r)=>s+r.saida,0);document.getElementById('kEntrada').textContent=fmt(totEnt);document.getElementById('kSaida').textContent=fmt(totSai);document.getElementById('kSaldo').textContent=fmt(saldo);document.getElementById('kPct').textContent=(100-pct).toFixed(1)+'% do fundo';document.getElementById('kMO').textContent=fmt(moTotal);document.getElementById('kMat').textContent=fmt(matTotal);document.getElementById('saldoBig').textContent=fmt(saldo);document.getElementById('saldoInfo').textContent=`Entrada ${fmt(totEnt)} · Saída ${fmt(totSai)}`;document.getElementById('pctBar').style.width=Math.min(pct,100)+'%';document.getElementById('pctLbl').textContent=pct.toFixed(1)+'%';document.getElementById('ctItau').textContent=fmt(contas.itau);document.getElementById('ct99').textContent=fmt(contas.pay99);document.getElementById('footerData').textContent=new Date().toLocaleDateString('pt-BR');renderInsumos(transacoes);renderDonut(transacoes);renderBars(transacoes,curFilter);renderMO(transacoes);renderSemanas(semanas);renderPrecos(transacoes);renderEtapas(transacoes);renderTable(transacoes,curTblFilter);}
+
+function renderInsumos(transacoes){const agg={};for(const t of transacoes){if(!t.saida||!t.descricao)continue;const key=matchInsumo(t.descricao);if(!key)continue;if(!agg[key])agg[key]={total:0,qtd:0,compras:0,precos:[]};agg[key].total+=t.saida;agg[key].compras++;if(t.quantidade>0)agg[key].qtd+=t.quantidade;if(t.unitario>0)agg[key].precos.push(t.unitario);}const html=INSUMOS_DEF.map(ins=>{const d=agg[ins.key];if(!d)return'';const avgPreco=d.precos.length?d.precos.reduce((s,v)=>s+v,0)/d.precos.length:0;const precoMin=d.precos.length?Math.min(...d.precos):0;const precoMax=d.precos.length?Math.max(...d.precos):0;const hasVar=precoMin>0&&precoMax>0&&precoMax!==precoMin;const varPct=hasVar?((precoMax-precoMin)/precoMin*100):0;const qtdStr=d.qtd>0?fmtN(d.qtd,d.qtd<10?1:0):'-';return`<div class="insumo-card"><span class="ins-icon">${ins.icon}</span><div class="ins-name">${ins.label}</div><div class="ins-qty">${qtdStr}</div><div class="ins-unit">${d.qtd>0?ins.unit:'-'}</div><div class="ins-total">${fmt(d.total)}</div><div class="ins-compras">${d.compras} compra${d.compras>1?'s':''}</div>${hasVar?`<div style="font-family:var(--font-m);font-size:10px;color:var(--accent2);margin-top:4px">▲${varPct.toFixed(0)}%</div>`:''}</div>`;}).filter(Boolean).join('');document.getElementById('insumos-grid').innerHTML=html||'<div class="no-data">Sem insumos</div>';}
+
+const DIARIA_PEDREIRO=150,DIARIA_SERVENTE=100;
+function renderMO(transacoes){const mo={pedreiro:{dias:0,total:0},servente:{dias:0,total:0}};for(const t of transacoes){if(!t.saida)continue;const d=normaliza(t.descricao);if(d.includes('pedreiro')){mo.pedreiro.total+=t.saida;mo.pedreiro.dias+=t.quantidade>0?t.quantidade:t.saida/DIARIA_PEDREIRO;}if(d.includes('servente')){mo.servente.total+=t.saida;mo.servente.dias+=t.quantidade>0?t.quantidade:t.saida/DIARIA_SERVENTE;}}document.getElementById('maoTbody').innerHTML=`<tr><td>👷 Pedreiro</td><td><span class="dia-chip">${fmtN(mo.pedreiro.dias,1)} dias</span></td><td class="tm">${fmt(DIARIA_PEDREIRO)}/dia</td><td class="tg">${fmt(mo.pedreiro.total)}</td></tr><tr><td>🧑‍🔧 Servente</td><td><span class="dia-chip" style="background:var(--blue);opacity:.7">${fmtN(mo.servente.dias,1)} dias</span></td><td class="tm">${fmt(DIARIA_SERVENTE)}/dia</td><td class="tg">${fmt(mo.servente.total)}</td></tr>`;const total=mo.pedreiro.total+mo.servente.total,totalDias=mo.pedreiro.dias+mo.servente.dias;document.getElementById('maoTotais').innerHTML=`<div style="background:var(--surface2);padding:12px 14px;border-left:3px solid var(--blue)"><div style="font-family:var(--font-m);font-size:10px;color:var(--muted);text-transform:uppercase">Total Dias</div><div style="font-family:var(--font-d);font-size:24px;color:var(--blue)">${fmtN(totalDias,1)}</div></div><div style="background:var(--surface2);padding:12px 14px;border-left:3px solid var(--green)"><div style="font-family:var(--font-m);font-size:10px;color:var(--muted);text-transform:uppercase">Total M.O.</div><div style="font-family:var(--font-d);font-size:24px;color:var(--green)">${fmt(total)}</div></div>`;}
+
+function renderDonut(transacoes){const cats={};for(const t of transacoes){if(!t.saida||!t.descricao)continue;const d=normaliza(t.descricao);if(d.includes('pedreiro')||d.includes('servente')){cats['Mão de Obra']=(cats['Mão de Obra']||0)+t.saida;}else{const g=getGrupo(t.descricao);cats[g]=(cats[g]||0)+t.saida;}}const entries=Object.entries(cats).sort((a,b)=>b[1]-a[1]),total=entries.reduce((s,[,v])=>s+v,0);if(!entries.length){document.getElementById('donutWrap').innerHTML='<div class="no-data">Sem dados</div>';return;}const top8=entries.slice(0,8),size=160,cx=80,cy=80,r=58,inner=34;let angle=-Math.PI/2,paths='';top8.forEach(([,val],i)=>{const sl=(val/total)*2*Math.PI,x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle),x2=cx+r*Math.cos(angle+sl),y2=cy+r*Math.sin(angle+sl),xi1=cx+inner*Math.cos(angle),yi1=cy+inner*Math.sin(angle),xi2=cx+inner*Math.cos(angle+sl),yi2=cy+inner*Math.sin(angle+sl),lg=sl>Math.PI?1:0;paths+=`<path d="M ${xi1} ${yi1} L ${x1} ${y1} A ${r} ${r} 0 ${lg} 1 ${x2} ${y2} L ${xi2} ${yi2} A ${inner} ${inner} 0 ${lg} 0 ${xi1} ${yi1} Z" fill="${COLORS[i]}" opacity=".9"/>`;angle+=sl;});document.getElementById('donutWrap').innerHTML=`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${paths}<text x="${cx}" y="${cy-6}" text-anchor="middle" fill="#6b7280" font-family="DM Mono" font-size="9">GASTOS</text><text x="${cx}" y="${cy+10}" text-anchor="middle" fill="#f0c040" font-family="Bebas Neue" font-size="13">${fmt(total)}</text></svg><div class="donut-legend">${top8.map(([lbl,val],i)=>`<div class="legend-item"><div class="ldot" style="background:${COLORS[i]}"></div><span style="color:var(--text);flex:1">${lbl}</span><span style="color:var(--muted)">${(val/total*100).toFixed(0)}%</span></div>`).join('')}</div>`;}
+
+const FILTER_MAP={estrutura:['tijolo','cimento','brita','ferragem','arames','prego'],mao:['pedreiro','servente'],areia:['areia'],outros:[]};
+function setFilter(f,btn){curFilter=f;document.querySelectorAll('#filterBar .fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');if(allData)renderBars(allData.transacoes,f);}
+function renderBars(transacoes,filter){const cats={};for(const t of transacoes){if(!t.saida||!t.descricao)continue;const d=normaliza(t.descricao);if(filter!=='todos'){const keys=FILTER_MAP[filter]||[];if(!keys.some(x=>d.includes(x)))continue;}const g=getGrupo(t.descricao);cats[g]=(cats[g]||0)+t.saida;}const entries=Object.entries(cats).sort((a,b)=>b[1]-a[1]).filter(([k])=>!['Juros','Depósito'].includes(k));if(!entries.length){document.getElementById('barChart').innerHTML='<div class="no-data">Sem dados</div>';return;}const max=entries[0][1];document.getElementById('barChart').innerHTML=entries.slice(0,12).map(([lbl,val])=>`<div class="bar-row"><div class="bar-lbl">${lbl}</div><div class="bar-track"><div class="bar-fill" style="width:${(val/max*100)}%"></div></div><div class="bar-val">${fmt(val)}</div></div>`).join('');}
+
+function renderSemanas(semanas){if(!semanas.some(v=>v>0)){document.getElementById('wkGrid').innerHTML='<div class="no-data">Sem dados</div>';return;}document.getElementById('wkGrid').innerHTML=semanas.map((v,i)=>`<div class="wk"><div class="wk-n">S${i+1}</div><div class="wk-v">${v>0?fmt(v):'—'}</div></div>`).join('');}
+
+function renderPrecos(transacoes){const hist={};for(const t of transacoes){if(!t.saida||!t.descricao||!t.unitario)continue;const key=matchInsumo(t.descricao);if(!key)continue;if(!hist[key])hist[key]=[];hist[key].push(t.unitario);}const rows=Object.entries(hist).map(([key,precos])=>{const def=INSUMOS_DEF.find(d=>d.key===key);if(!def)return'';const min=Math.min(...precos),max=Math.max(...precos),avg=precos.reduce((s,v)=>s+v,0)/precos.length,trend=precos.length>1&&precos[precos.length-1]>precos[0]?'↑':'↓',trendColor=trend==='↑'?'var(--red)':'var(--green)';return`<div class="preco-row"><span style="font-size:18px">${def.icon}</span><span class="preco-mat">${def.label}</span><span class="preco-chip">${fmt(avg)}/${def.unit}</span>${precos.length>1?`<span class="preco-trend" style="color:${trendColor}">${trend}</span>`:'<span class="preco-trend">1x</span>'}</div>`;}).filter(Boolean).join('');document.getElementById('precosHist').innerHTML=rows||'<div class="no-data">Sem preços</div>';}
+
+function renderEtapas(transacoes){const base=transacoes.filter(t=>{if(!t.saida)return false;const d=normaliza(t.descricao);if(d.includes('imposto')||d.includes('juros'))return false;return isAntesBaseDate(t.data);}).reduce((s,r)=>s+r.saida,0),constr=transacoes.filter(t=>{if(!t.saida)return false;const d=normaliza(t.descricao);if(d.includes('imposto')||d.includes('juros'))return false;return!isAntesBaseDate(t.data);}).reduce((s,r)=>s+r.saida,0),max=Math.max(base,constr),barH=base>0||constr>0?180:0;document.getElementById('etapaBase').textContent=fmt(base);document.getElementById('etapaBaseSub').textContent=base>0?`${fmt(base)}`:'-';document.getElementById('etapaConstr').textContent=fmt(constr);document.getElementById('etapaConstrSub').textContent=constr>0?`${fmt(constr)}`:'--';}
+
+function setTblFilter(f,btn){curTblFilter=f;document.querySelectorAll('#tblFilter .fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');if(allData)renderTable(allData.transacoes,f);}
+function renderTable(transacoes,filter){let rows=transacoes.filter(t=>{if(!t.descricao)return false;if(filter==='entradas')return t.entrada>0;if(filter==='saidas')return t.saida>0;return true;});document.getElementById('tblBody').innerHTML=rows.map((r,i)=>`<tr><td class="tm">${i+1}</td><td class="tm">${r.data||'-'}</td><td>${r.descricao}</td><td class="tm">${r.quantidade>0?fmtN(r.quantidade,1):'-'}</td><td class="tm">${r.unitario>0?fmt(r.unitario):'-'}</td><td class="tg">${r.entrada>0?fmt(r.entrada):''}</td><td class="tr">${r.saida>0?fmt(r.saida):''}</td></tr>`).join('');}
+
+fetchSheets();
+setInterval(fetchSheets,60000);
+</script>
+</body>
+</html>
