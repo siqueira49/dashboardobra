@@ -891,27 +891,23 @@ function renderCategorias(transacoes){
 }
 
 function renderEtapas(transacoes){
-  const base=transacoes.filter(t=>{
+  const gastos=transacoes.filter(t=>{
     if(!t.saida)return false;
     const d=normaliza(t.descricao);
-    if(d.includes('imposto')||d.includes('juros')||d.includes('deposito')||d.includes('inicial'))return false;
-    return isAntesBaseDate(t.data);
-  }).reduce((s,r)=>s+r.saida,0);
-
-  const constr=transacoes.filter(t=>{
-    if(!t.saida)return false;
-    const d=normaliza(t.descricao);
-    if(d.includes('imposto')||d.includes('juros')||d.includes('deposito')||d.includes('inicial'))return false;
-    return!isAntesBaseDate(t.data);
-  }).reduce((s,r)=>s+r.saida,0);
+    return!d.includes('imposto')&&!d.includes('juros')&&!d.includes('deposito')&&!d.includes('inicial');
+  });
+  
+  const mid=Math.floor(gastos.length/2);
+  const base=gastos.slice(0,mid).reduce((s,r)=>s+r.saida,0);
+  const constr=gastos.slice(mid).reduce((s,r)=>s+r.saida,0);
 
   const max=Math.max(base,constr);
   const barH=base>0||constr>0?180:0;
 
   document.getElementById('etapaBase').textContent=fmt(base);
-  document.getElementById('etapaBaseSub').textContent=base>0?'Gastos antes de 26/03':'—';
+  document.getElementById('etapaBaseSub').textContent=base>0?`${gastos.slice(0,mid).length} transações`:'—';
   document.getElementById('etapaConstr').textContent=fmt(constr);
-  document.getElementById('etapaConstrSub').textContent=constr>0?'Gastos após 25/03':'—';
+  document.getElementById('etapaConstrSub').textContent=constr>0?`${gastos.slice(mid).length} transações`:'—';
 
   if(base===0&&constr===0){
     const etapasEl=document.getElementById('etapasChart');if(etapasEl)etapasEl.innerHTML='<div class="no-data">Sem gastos registrados</div>';
