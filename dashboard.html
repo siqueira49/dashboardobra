@@ -335,6 +335,33 @@ const INSUMOS_DEF = [
 ];
 
 function normaliza(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+function getIconForInsumo(desc){
+  const d=normaliza(desc);
+  if(d.includes('tijolo'))return'🧱';
+  if(d.includes('cimento'))return'🏗️';
+  if(d.includes('areia fina')||d.includes('areia fino'))return'🏖️';
+  if(d.includes('areia gross')||d.includes('areia grossa'))return'⛏️';
+  if(d.includes('brita'))return'🪨';
+  if(d.includes('ferragem')||d.includes('arames')||d.includes('prego'))return'🔩';
+  if(d.includes('pedreiro'))return'👷';
+  if(d.includes('servente'))return'🧑‍🔧';
+  if(d.includes('impermeabilizante')||d.includes('ipermiabilizante'))return'🛡️';
+  if(d.includes('aterro'))return'🚛';
+  if(d.includes('tinta')||d.includes('pintura'))return'🎨';
+  if(d.includes('tela')||d.includes('telado'))return'🕸️';
+  if(d.includes('massa')||d.includes('reboco'))return'🪣';
+  if(d.includes('vidro')||d.includes('janela'))return'🪟';
+  if(d.includes('porta'))return'🚪';
+  if(d.includes('tubo')||d.includes('encanamento'))return'🔧';
+  if(d.includes('eletrica')||d.includes('fio')||d.includes('cabo'))return'⚡';
+  if(d.includes('concreto')||d.includes('usinado'))return'🏢';
+  if(d.includes('laje')||d.includes('piso'))return'🏗️';
+  if(d.includes('madeira')||d.includes('caibro')||d.includes('telhado'))return'🪵';
+  if(d.includes('telhado')||d.includes('telha'))return'🏘️';
+  if(d.includes('reboco'))return'🎨';
+  return'📦';
+}
+
 function parseData(dateStr){
   if(!dateStr)return null;
   const parts=String(dateStr).split('/');
