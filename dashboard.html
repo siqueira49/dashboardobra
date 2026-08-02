@@ -218,6 +218,13 @@ footer{text-align:center;padding:18px;font-family:var(--font-m);font-size:10px;c
 </div>
 
 <!-- GRID PRINCIPAL -->
+<div style="background:var(--surface);padding:26px 30px;border-bottom:1px solid var(--border)">
+  <div class="ptitle"><span class="dot"></span> Categorias de Materiais</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px" id="catsGrid">
+    <div class="no-data" style="grid-column:1/-1">Carregue a planilha</div>
+  </div>
+</div>
+
 <div class="grid2">
 
   <!-- SITUAÇÃO FINANCEIRA -->
@@ -859,11 +866,13 @@ function renderPrecos(transacoes){
     </div>`;
   }).filter(Boolean).join('');
 
-  document.getElementById('precosHist').innerHTML=rows||'<div class="no-data">Sem histórico de preços</div>';
+  const precosEl=document.getElementById('precosHist');if(precosEl)precosEl.innerHTML=rows||'<div class="no-data">Sem histórico de preços</div>';
 }
 
 // ===================== TABLE =====================
 function renderCategorias(transacoes){
+  const grid=document.getElementById('catsGrid');
+  if(!grid)return;
   const cats=new Set();
   for(const t of transacoes){
     if(t.saida>0&&t.descricao){
@@ -904,9 +913,9 @@ function renderEtapas(transacoes){
   document.getElementById('etapaConstrSub').textContent=constr>0?'Gastos após 25/03':'—';
 
   if(base===0&&constr===0){
-    document.getElementById('etapasChart').innerHTML='<div class="no-data">Sem gastos registrados</div>';
+    const etapasEl=document.getElementById('etapasChart');if(etapasEl)etapasEl.innerHTML='<div class="no-data">Sem gastos registrados</div>';
   } else {
-    document.getElementById('etapasChart').innerHTML=`
+    const etapasEl=document.getElementById('etapasChart');if(etapasEl)etapasEl.innerHTML=`
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-items:flex-end">
         <div>
           <div style="height:\${barH}px;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:3px 3px 0 0;margin-bottom:8px"></div>
